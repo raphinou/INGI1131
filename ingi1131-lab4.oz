@@ -82,4 +82,58 @@ thread {PassingTheToken 1 X Y} end
 thread {PassingTheToken 2 Y Z} end
 thread {PassingTheToken 3 Z X} end
 
-   
+
+% Ex 4
+% Here is a version where Bar continues to server beers.
+% Not what we need
+declare 
+fun {Bar C}
+   {Delay 500}
+   {Show 'Beer delivered'#C}
+   beer|{Bar C+1}
+end
+
+fun {Foo In C}
+   case In of H|T then
+      {Delay 1200}
+      {Show 'Beer drunk'#C}
+      {Foo T C+1}
+   end
+end
+
+
+% {Browse {Bar}} % why doens't this work?
+declare Beers Result in
+Beers = thread {Bar 0} end
+Result = thread {Foo Beers 0} end
+
+% Here is a version where Bar serves a beer as soon as Foo requests it.
+% Not yet there, but closer
+% You can see that Foo is waiting for beers to be delivered
+declare 
+fun {Bar C In}
+   case In of H|T then
+      {Delay 500}
+      {Show 'Beer delivered'#C}
+      H=beer
+      {Bar C+1 T}
+   end
+end
+
+fun {Foo In C}
+   local H T in
+      In=H|T
+      {Show 'Waiting for beer'#C}
+      {Wait H}
+      {Delay 1200}
+      {Show 'Beer drunk'#C}
+      {Foo T C+1}
+   end
+end
+
+
+% {Browse {Bar}} % why doens't this work?
+declare Beers Result in
+Beers = thread {Bar 0 Beers} end
+Result = thread {Foo Beers 0} end
+	

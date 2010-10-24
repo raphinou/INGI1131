@@ -176,4 +176,53 @@ end
 declare T
 T = gate(value:3 l:left)
 
-	 
+
+
+%3 Thread termination
+%a
+declare
+L1 L2 F Ok
+L1 = [1 2 3]
+F = fun {$ X} {Delay 200} X*X end
+thread L2 = {Map L1 F} Ok=done end
+{Wait Ok}
+{Show L2}
+
+
+%b
+declare
+L1 L2 L3 L4 Ok1 Ok2 Ok3
+L1 = [1 2 3]
+thread L2 = {Map L1 fun {$ X} {Delay 200} X*X end} Ok1=done end
+thread L3 = {Map L1 fun {$ X} {Delay 400} 2*X end} Ok2=Ok1 end
+thread L4 = {Map L1 fun {$ X} {Delay 600} 3*X end} Ok3=Ok2 end
+{Wait Ok3} % We have to wait for Ok3 here! Waiting here for Ok1 is not right!
+{Show L2#L3#L4}
+
+%c
+declare Result Ok
+proc {MapRecord Ok R1 F R2 }
+   A={Record.arity R1}
+   proc {Loop L}
+      MyOk in
+      case L of nil then skip
+      [] H|T then
+	 thread R2.H={F R1.H}
+	    if T==nil then
+	       Ok=done % when the last thread has finished, it sets the Ok variable passed as argument to done,
+	    else       % and, as threads dinish, this will bubble up to the Ok variable passed as argument
+	       MyOk=Ok end  
+	 end                              
+	 {Loop T}
+      end
+   end
+in
+   R2={Record.make {Record.label R1} A}
+   {Loop A}
+end
+
+Result= {MapRecord Ok
+	 '#'(a:1 b:2 c:3 d:4 e:5 f:6 g:7)
+	 fun {$ X} {Delay 1000} 2*X end}
+{Wait Ok}
+{Show Result}

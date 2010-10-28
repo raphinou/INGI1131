@@ -127,3 +127,91 @@ declare Xs Ys Zs
 {Map Ys fun {$ X} X*X end Zs}
 % la fonction du dernier appel ne doit pas etre lazy, sinon rien ne se passe. En effet, aucun element n'est utilisé -> aucun calcul.
 
+
+
+
+%5
+declare
+fun lazy {Insert X Ys}
+   {Show iiiiiiiiii}
+   case Ys of
+      nil then [X]
+   [] Y|Yr then
+      if X < Y then
+	 X|Ys
+      else
+	 Y|{Insert X Yr}
+      end
+   end
+end
+fun lazy {InSort Xs} %% Sorts list Xs
+   {Show ooooooo}
+   case Xs of
+      nil then nil
+   [] X|Xr then
+      {Insert X {InSort Xr}}
+   end
+end
+fun {Minimum Xs}
+   {InSort Xs}.1
+end
+Result={Minimum [3 2 1 4]}
+
+
+{Show Result}
+
+%Complexity n²
+[3 2 1 4]
+{Insert 3
+ {Insert 2
+   {Insert 1
+    {Insert 4 {Insort nil}}}}
+ % n going down
+ % n going up
+
+%  Complexity of lazy version is n.
+% Insert compare son premier argument à la tete de la liste -> il ne calcule qu'un élément de la liste.
+
+
+ %6
+% Comme on fait un last, il faut calculer toute la liste -> pas d'avantage.
+
+ 
+ 
+ %8
+ declare
+ fun {Buffer In N}
+    End=thread {List.drop In N} end
+    fun lazy {Loop In End}
+       case In of I|In2 then
+	  I|{Loop In2 thread End.2 end}
+       end
+    end
+ in
+    {Loop In End}
+ end
+declare
+fun lazy {DGenerate N}
+      N|{DGenerate N+1}
+end
+fun {DSum01 ?Xs A Limit}
+   if Limit>0 then
+      {Delay {OS.rand} mod 10}
+      {DSum01 Xs.2 A+Xs.1 Limit-1}
+   else A end
+end
+fun {DSum02 ?Xs A Limit}
+   {Delay {OS.rand} mod 10}
+   if Limit>0 then
+      X|Xr=Xs
+   in
+      {DSum02 Xr A+X Limit-1}
+   else A end
+end
+local Xs Ys V1 V2 in
+    {DGenerate 1 Xs} % Producer thread
+    {Buffer Xs 4 Ys}  % Buffer thread
+   thread V1={DSum01 Ys 0 100} end % Consumer thread
+   thread V2={DSum02 Ys 2 100} end % Consumer thread
+   {Browse [Xs Ys V1 V2]}
+end

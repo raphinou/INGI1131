@@ -141,15 +141,15 @@ Result = thread {Foo Beers 0} end
 % Bounded Buffer
 % Not working
 declare 
-fun {Bar C In}
+proc {Bar C In}
    case In of H|T then
-      {Delay 500}
       {Show 'Beer delivered'#C}
+      {Delay 4000}
       H=beer
       {Bar C+1 T}
    end
 end
-fun {Buffer In N Out}
+proc {MBuffer In N Out}
    fun {Startup N In}
       if N==0 then
 	 {Show 'Done initialising buffer'}
@@ -160,31 +160,37 @@ fun {Buffer In N Out}
 	 {Startup N-1 T}
       end
    end
-   fun {BufferLoop In Out Ctrl}
-      {Show 'in buffer loop'}
-      case In of Hi|Ti then New Ctrl2 in
-	 Out=_|Hi
-	 Ctrl=_|Ctrl2
-	 {BufferLoop Ti New Ctrl2}
+   proc {BufferLoop In Out}
+      case Out of Ho|To then New in
+	 In=Ho|New
+	 thread {BufferLoop New To} end
       end
-   end
+   end   
+   {Show 'will call startup'}
    Ctrl = {Startup N In}
 in
-   {BufferLoop In Out Ctrl}
+   {BufferLoop Ctrl Out}
 end
 fun {Foo In C}
-   case In of _|T then
-      {Show 'Waiting for beer'#C}
-      {Delay 1200}
-      {Show 'Beer drunk'#C}
-      {Foo T C+1}
+   {Show 'Waiting for beer'#C}
+   local H T in 
+      H|T=In
+      if H==beer then
+	 {Show 'Got beer'#C}
+	 {Delay 1200}
+	 {Show 'Beer drunk'#C}
+	 {Foo T C+1}
+      end
    end
 end
 % why doens't this work?
 declare Beers ServedBeers Buffer Result in
-Beers = thread {Bar 0 Beers} end
-Buffer = thread {Buffer Beers 4 ServedBeers}end
+thread {Bar 0 Beers} end
+thread {MBuffer Beers 4 ServedBeers}end
 Result = thread {Foo ServedBeers 0} end
+{Browse Result}
+{Browse ServedBeers}
+{Browse Beers}
 
 
 	

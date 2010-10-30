@@ -42,6 +42,21 @@ end
 {Browse Result }
    
 
+% Better solution:
+declare
+fun {Facts N}
+   fun {FactsIn N0 N1 N2}
+      if N0<N then
+	 N1|{FactsIn N0+1 N2 N2*(N0+3)}
+      else
+	 nil
+      end
+   end
+in
+   {FactsIn 0 1 2}
+end
+
+% My original solution, cumbersome:
 % Beware: Append takes 2 lists as argument!!
 declare Fact in
 fun {Fact N}

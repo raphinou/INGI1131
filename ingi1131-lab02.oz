@@ -17,6 +17,10 @@ in
    else {MaxLoop L.2 L.1} end
 end
 % Why does this call raise an error? (Illegal arity, found 1, expected 2)
+% Answer: it is because we have a function, that returns a value. 
+% It is translated in the kernel language as a call to a procedure with an additional argument
+% which is the variable to which the result of the call is assigned. As it is not present, 
+% it raises an arity error.
 %{Max [ 4 2 6 4 8 ]}
 % This works
 {Browse {Max [ 4 2 6 4 8]} }

@@ -91,9 +91,10 @@ fun {Sum N}
    else {Sum N-1} + N
    end
 end
+Can be rewritten with an accumulator.
 
 %2.b
-% Not tail recursive because we call the function before appending its result to the head.
+i% tail recursive, as we build a data structure, which can use unbound variables. 
 
 % Problem with missing else clause?? line 77. matching [1 2]#[3 4] shold be fine, no?
 declare MyAppend in
@@ -127,7 +128,7 @@ end
 
 %3.b
 % ################## I don't know ###############
-% We have a function call, which does not block, but will operate when all operands are available.
+%This is not a function call! we build a data structure which can use unbound variables.
 local
    X Y
 in
@@ -141,43 +142,59 @@ end
 
 
 %4.1
-
 declare ForAllTail Pairs in
 proc {Pairs L E}
-   case L of nil then skip
-   [] H|T then
+   case L of H|T then
       {Browse pair(H E)}
       {Pairs T E}
+      else skip
    end
 end
 proc {ForAllTail Xs P}
-   case Xs of H|nil then skip
-   [] H|T then
+   case Xs of  H|T then
       {P Xs}
       {ForAllTail T P}
+      else skip
    end
 end
-
 {ForAllTail [a b c d] proc {$ Tail}
-			 {Pairs Tail.2 Tail.1}
-		      end }
-
+                         {Pairs Tail.2 Tail.1}
+                      end }
 
 %3.b
-% can't compile due to skiparity error on GEIOAcc (found 2 expected 3)
+#Nearly there, but still not correct....
+declare
+Tree = tree(info:10
+	    left:tree(info:7
+		      left:nil
+		      right:tree(info:9
+				 left:nil
+				 right:nil))
+	    right:tree(info:18
+		       left:tree(info:14
+				 left:nil
+				 right:nil)
+		       right:nil))
 declare GetElementsInOrder in
 fun {GetElementsInOrder Tree}
-   fun {GEIOAcc Tree Acc}
-      case Tree of nil then Acc
-      [] tree(info:Info left:L  right:R) then
-	 {GEIOAcc L Acc}
-	 {Append Acc [Info]}
-	 {GEIOAcc R Acc}
+   fun {GEIOAcc Tree}
+      case Tree of nil then nil
+      [] tree(info:Info left:L right:R) then
+	 case L#R of nil#nil then Info
+	 [] T#nil then {GEIOAcc L}| Info
+	 [] nil#T then Info|  {GEIOAcc R} 
+	 [] T1#T2 then {GEIOAcc L}|Info|{GEIOAcc R}
+	 end
       end
    end
-in
-   {GEIOAcc Tree nil}
+in 
+   {GEIOAcc Tree}
 end
+{Browse {GetElementsInOrder Tree}}
+
+
+
+
 
 {Browse {Append [1] [1 2]}}
 
@@ -261,3 +278,43 @@ end
 {Browse {Filter [1 2 3 4 5 6 7] FF}}
 {Browse {Filter [1 2 3 4 5 6 7] fun {$ I} I>4 end}}
 {Browse {FF 4}}
+
+
+
+%10
+% There is certainly a better solution this, but this works
+declare
+fun {Flatten L}
+   fun {FlattenAcc L Acc}
+      case L of H|nil then
+	 {FlattenAcc H Acc}
+      [] H|T then
+	 %{FlattenAcc H Acc}
+	 {FlattenAcc T {FlattenAcc H Acc}}
+      [] nil then Acc
+      else
+	 L|Acc
+      end
+   end
+in
+   {Reverse {FlattenAcc L nil}}
+end
+{Browse {Flatten [a [b [c d]] e [[[f]]]]} }o
+
+% This uses accumulators.
+declare
+fun {Flatten L}
+   fun {FlattenAcc L Acc}
+      case L of H|nil then
+	 {FlattenAcc H Acc}
+      [] H|T then
+	 {FlattenAcc T {FlattenAcc H Acc}}
+      [] nil then Acc
+      else
+	 {Append Acc [L]}
+      end
+   end
+in
+   {FlattenAcc L nil}
+end
+{Browse {Flatten [a [b [c d]] e [[[f]]]]} }

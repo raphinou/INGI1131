@@ -34,6 +34,32 @@ ABCD
 
 
 
+%6
+declare
+fun {Ints N Max}
+   if N>Max then nil
+   else N|{Ints N+1 Max}
+   end
+end
+fun {FilterOdd L}
+   case L of H|T then
+      if H mod 2 == 0 then {FilterOdd T}
+      else H|{FilterOdd T}
+      end
+      [] nil then nil
+   end
+end
+fun {Consumer L Acc}
+   case L of H|T then {Consumer T Acc+H}
+      [] nil then Acc
+   end
+end
+I= thread {Ints 0 100} end
+Odds = thread {FilterOdd I} end
+Sum = {Consumer Odds 0} 
+{Browse I}
+{Browse Odds}
+{Browse Sum}
 
 %5
 declare Prod Cons in 

@@ -76,11 +76,11 @@ proc {PassingTheToken Id Tin Tout}
       skip
    end
 end
-declare X Y Z in 
+declare X Y Z W in 
 X = h | Z
 thread {PassingTheToken 1 X Y} end
-thread {PassingTheToken 2 Y Z} end
-thread {PassingTheToken 3 Z X} end
+thread {PassingTheToken 2 Y W} end
+thread {PassingTheToken 3 W X} end
 
 
 % Ex 4
@@ -139,13 +139,13 @@ Result = thread {Foo Beers 0} end
 	
 
 % Bounded Buffer
-% Not working
+% Correct version
 declare 
 proc {Bar C In}
    case In of H|T then
+     {Delay 1000}
       {Show 'Beer delivered'#C}
-      {Delay 4000}
-      H=beer
+       H=beer
       {Bar C+1 T}
    end
 end
@@ -160,30 +160,31 @@ proc {MBuffer In N Out}
 	 {Startup N-1 T}
       end
    end
-   proc {BufferLoop In Out}
-      case Out of Ho|To then New in
-	 In=Ho|New
-	 thread {BufferLoop New To} end
+   proc {BufferLoop In Out End}
+      case Out of Ho|To then Hi Ti End2 in
+	 In=Hi|Ti
+	 Ho=Hi
+	 End=_|End2
+	 thread {BufferLoop Ti To End2} end
       end
    end   
    {Show 'will call startup'}
    Ctrl = {Startup N In}
 in
-   {BufferLoop Ctrl Out}
+   {BufferLoop In Out Ctrl}
 end
 fun {Foo In C}
-   {Show 'Waiting for beer'#C}
    local H T in 
       H|T=In
       if H==beer then
 	 {Show 'Got beer'#C}
-	 {Delay 1200}
+	 {Delay 4000}
 	 {Show 'Beer drunk'#C}
 	 {Foo T C+1}
       end
    end
 end
-% why doens't this work?
+% This works as expected
 declare Beers ServedBeers Buffer Result in
 thread {Bar 0 Beers} end
 thread {MBuffer Beers 4 ServedBeers}end
@@ -194,3 +195,26 @@ Result = thread {Foo ServedBeers 0} end
 
 
 	
+%5
+% Create a chain of assignments
+declare
+proc {MapRecord R1 F R2 Done}
+   A={Record.arity R1}
+   proc {Loop L ?ThreadDone}
+      case L of nil then ThreadDone=unit
+      [] H|T then NewDone in
+	 thread R2.H={F R1.H} ThreadDone=NewDone end
+	 {Loop T NewDone}
+      end
+   end
+in
+   R2={Record.make {Record.label R1} A}
+   {Loop A Done}
+end
+Done Result
+{MapRecord
+       '#'(a:1 b:2 c:3 d:4 e:5 f:6 g:7)
+       fun {$ X} {Delay 1000} 2*X end Result Done}
+{Wait Done}
+{Show Result}
+

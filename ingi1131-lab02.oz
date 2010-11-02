@@ -162,7 +162,11 @@ end
                       end }
 
 %3.b
-#Nearly there, but still not correct....
+%A working solution
+%Note: use Append to append to the list
+%When doing Head|Tail , Head will be one element of the list,
+%so if Head=[1 2 3 4] and Tail is [5 6 7] 
+% Head|Tail will give [[1 2 3 4] 5 6 7]
 declare
 Tree = tree(info:10
 	    left:tree(info:7
@@ -177,18 +181,15 @@ Tree = tree(info:10
 		       right:nil))
 declare GetElementsInOrder in
 fun {GetElementsInOrder Tree}
-   fun {GEIOAcc Tree}
-      case Tree of nil then nil
+   fun {GEIOAcc Tree Acc}
+      case Tree of nil then Acc
       [] tree(info:Info left:L right:R) then
-	 case L#R of nil#nil then Info
-	 [] T#nil then {GEIOAcc L}| Info
-	 [] nil#T then Info|  {GEIOAcc R} 
-	 [] T1#T2 then {GEIOAcc L}|Info|{GEIOAcc R}
-	 end
+	 {Append {Append {GEIOAcc L Acc} [Info]}{GEIOAcc R Acc}}
       end
    end
-in 
-   {GEIOAcc Tree}
+   Result=nil
+in
+   {GEIOAcc Tree Result}
 end
 {Browse {GetElementsInOrder Tree}}
 

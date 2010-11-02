@@ -226,3 +226,61 @@ Result= {MapRecord Ok
 	 fun {$ X} {Delay 1000} 2*X end}
 {Wait Ok}
 {Show Result}
+
+
+
+
+
+
+% d.ii
+
+declare
+proc {Buffer N ?Xs Ys}
+   fun {Startup N ?Xs}
+      if N==0 then Xs
+      else Xr in Xs= _|Xr {Startup N-1 Xr} end
+   end
+   proc {AskLoop Ys ?Xs ?End}
+      case Ys of Y|Yr then
+	 Xr End2
+      in
+	 Xs=Y|Xr % Get element from buffer
+	 End=_|End2 % Replenish the buffer
+	 {AskLoop Yr Xr End2}
+      end
+   end
+   End={Startup N Xs}
+in
+   {AskLoop Ys Xs End}
+end
+proc {DGenerate N Xs}
+   case Xs of X|Xr then X=N {DGenerate N+1 Xr} end
+end
+fun {DSum01 ?Xs A Limit}
+   {Delay 5000}
+   if Limit>0 then
+      X|Xr=Xs
+   in
+      {DSum01 Xr A+X Limit-1}
+   else A end
+end
+fun {DSum02 ?Xs A Limit}
+   {Delay 1000}
+   if Limit>0 then
+      X|Xr=Xs
+   in
+      {DSum02 Xr A+X Limit-1}
+   else A end
+end
+local Xs Ys Zs V1 V2 in
+   thread {DGenerate 1 Xs} end % Producer thread
+   thread {Buffer 4 Xs Ys} end % Buffer thread
+   thread {Buffer 1 Ys Zs} end % Buffer thread
+   thread V1={DSum01 Zs 0 15} end % Consumer thread
+   thread V2={DSum02 Zs 2 15} end % Consumer thread
+   {Browse x#Xs}
+   {Browse y#Ys}
+   {Browse z#Zs}
+   {Browse v1#V1}
+   {Browse v2#V2}
+end

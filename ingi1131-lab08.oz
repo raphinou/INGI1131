@@ -83,6 +83,15 @@ fun {WaitTwo X Y}
       end
    end
 end
+#better:
+fun {WaitTwo X Y}
+   S
+   P={NewPort S}
+in
+   thread {Wait X} {Send P 1} end
+   thread {Wait Y} {Send P 2} end
+   S.1
+end
 fun {SaveSend P M T}
    local Ack Timeout in
       {Send P M#Ack}
@@ -95,8 +104,6 @@ fun {SaveSend P M T}
    end
 end
 {Browse {SaveSend P test 3000}}
-
-
 %10
 declare
 fun {WaitTwo X Y}

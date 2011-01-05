@@ -65,7 +65,7 @@ proc {NewPortClose S ?SendC ?CloseC}
       {Exchange P Msg|T T}
    end
    proc {CloseC}
-      @P=nil
+      @P=nil %we have to bind the variable in the cell with nil!
    end
    P={NewCell S}
 end

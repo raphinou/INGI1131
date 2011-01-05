@@ -38,7 +38,6 @@ end
 
 %2
 % version given because addition waits for X to be bound.
-% Using Exchange her is not possible because the new value is based on the old one.
 % Here is a version that works, but that does not make both operation as one atomic operation.
 declare
 C={NewCell 0}
@@ -48,6 +47,14 @@ fun {Increment C}
    C:= X+1 
 end
 {Browse {Increment C}}
+{Browse @C}
+
+% Here is a version that works with Exchange:
+declare
+C={NewCell 0}
+for I in 1..1000 do 
+   thread local X X2 in {Delay {OS.rand} mod 1000} {Exchange C X X2} X2=X+1 end end
+end
 {Browse @C}
 
 % We could protect the critical region, eg with a lock
@@ -132,3 +139,6 @@ end
 
 
 %5 need to look at it.....
+% I don't think the second one is correct. It has several problems:
+- Both functions modify N 
+- both put back in the cell the old value of the end of the queue they don't manipulate. But what if a concurrent thread modifies this end at the same time? We erase its change!

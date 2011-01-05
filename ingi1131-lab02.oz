@@ -86,12 +86,17 @@ end
 
 % Not tail recursive because call to the function is not the last operation. The last operation in the function call is +
 % Solution: invert the operands
+declare
 fun {Sum N}
-   if N==0 then 0
-   else {Sum N-1} + N
+   fun {SumAcc N A}
+      if N==0 then A
+      else {SumAcc N-1 A+N}
+      end
    end
+in
+   {SumAcc N 0}
 end
-Can be rewritten with an accumulator.
+%rewritten with an accumulator.
 
 %2.b
 i% tail recursive, as we build a data structure, which can use unbound variables. 

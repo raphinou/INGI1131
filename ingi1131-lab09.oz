@@ -92,6 +92,53 @@ proc {LoopStudents L}
 end
 {LoopStudents {CreateUniversity 100}}
 
+% Better I think:
+declare
+fun {Student}
+   {StudentRMI}
+end
+fun {StudentRMI}
+   S
+in
+   thread
+      for ask(howmany:Beers) in S do
+	 Beers = {OS.rand} mod 24
+      end
+   end
+ {NewPort S}
+end
+fun {CreateUniversity Size}
+   fun {CreateLoop I}
+      if I =< Size then
+	 {Student}|{CreateLoop I+1}
+      else
+	 nil
+      end
+   end
+in
+   %% Kraft dinner is full of love and butter
+   {CreateLoop 1}
+end
+fun {FoldL S Fun State}
+   case S of H|T then
+      {FoldL T Fun {Fun H State}}
+   [] nil then State
+   end
+end
+Uni={CreateUniversity 10}
+{Browse Uni}
+fun {Counter N State}
+      case State of c(total:Total minimum:Minimum maximum:Maximum count:Count) then
+	 c(total:Total+N
+	   minimum:(if N<Minimum then N else Minimum end)
+	   maximum:(if N>Maximum then N else Maximum end)
+	   count:Count+1)
+      end
+end
+Ans={Map Uni fun {$ I} {Send I ask(howmany:$)} end }
+{Browse Ans}
+{Browse {FoldL Ans Counter c(total:0 minimum:10000 maximum:0 count:0)}}
+
 
 
 %3
